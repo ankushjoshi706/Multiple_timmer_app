@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multiple Timers App</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-color: #1a1a1a;
+            color: white;
+            text-align: center;
+        }
+        .timer-input {
+            background-color: #2b2b2b;
+            padding: 15px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .timer-input input {
+            width: 50px;
+            text-align: center;
+            font-size: 16px;
+            padding: 5px;
+            background: transparent;
+            border: none;
+            color: white;
+            border-bottom: 2px solid white;
+        }
+        .set-button {
+            background-color: #f4ea2a;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .timers {
+            margin-top: 20px;
+            width: 300px;
+        }
+        .timer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px;
+            background-color: #333;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+        .expired {
+            background-color: #F0F757;
+            color: black;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .title {
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+        .current-timers {
+            background-color: #333;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 20px;
+            display: inline-block;
+        }
+        .stop-button {
+            background-color: #34344A;
+            color: #FFFFFF;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .expired div {
+            flex-grow: 1;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <h2>Multiple Timers App</h2>
+    <div class="timer-input">
+        <label>Set Time :</label>
+        <input type="number" id="hours" placeholder="hh" min="0">
+        <span>:</span>
+        <input type="number" id="minutes" placeholder="mm" min="0" max="59">
+        <span>:</span>
+        <input type="number" id="seconds" placeholder="ss" min="0" max="59">
+        <button class="set-button" onclick="startTimer()">Set</button>
+    </div>
+    
+    <div class="current-timers">Current Timers</div>
+    <div class="timers" id="timers">You have no timers currently!</div>
+
+    <script>
+        let timers = [];
+
+        function startTimer() {
+            let hours = parseInt(document.getElementById('hours').value) || 0;
+            let minutes = parseInt(document.getElementById('minutes').value) || 0;
+            let seconds = parseInt(document.getElementById('seconds').value) || 0;
+            let totalSeconds = hours * 3600 + minutes * 60 + seconds;
+
+            if (totalSeconds <= 0) {
+                alert("Please enter a valid time.");
+                return;
+            }
+
+            let timerId = Date.now();
+            let timerObj = { id: timerId, remaining: totalSeconds };
+            timers.push(timerObj);
+            renderTimers();
+            countdown(timerId);
+        }
+
+        function renderTimers() {
+            let timerContainer = document.getElementById('timers');
+            timerContainer.innerHTML = '';
+            if (timers.length === 0) {
+                timerContainer.innerHTML = 'You have no timers currently!';
+                return;
+            }
+            timers.forEach(timer => {
+                let timerElement = document.createElement('div');
+                timerElement.className = 'timer';
+                timerElement.id = `timer-${timer.id}`;
+                timerElement.innerHTML = `
+                    <span>Time Left: ${formatTime(timer.remaining)}</span>
+                    <button class="stop-button" onclick="stopTimer(${timer.id})">Delete</button>
+                `;
+                timerContainer.appendChild(timerElement);
+            });
+        }
+
+        function countdown(timerId) {
+            let interval = setInterval(() => {
+                let timer = timers.find(t => t.id === timerId);
+                if (!timer) {
+                    clearInterval(interval);
+                    return;
+                }
+                timer.remaining--;
+                if (timer.remaining <= 0) {
+                    clearInterval(interval);
+                    let timerElement = document.getElementById(`timer-${timer.id}`);
+                    timerElement.className = 'expired';
+                    timerElement.innerHTML = `
+                        <div>Time is up!</div>
+                        <button class="stop-button" onclick="stopTimer(${timer.id})">Stop</button>
+                    `;
+                    playAlarm();
+                } else {
+                    renderTimers();
+                }
+            }, 1000);
+        }
+
+        function stopTimer(timerId) {
+            timers = timers.filter(timer => timer.id !== timerId);
+            renderTimers();
+        }
+
+        function formatTime(seconds) {
+            let h = Math.floor(seconds / 3600);
+            let m = Math.floor((seconds % 3600) / 60);
+            let s = seconds % 60;
+            return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+        }
+
+        function playAlarm() {
+            let alarm = new Audio('https://www.soundjay.com/button/beep-07.wav');
+            alarm.play();
+        }
+    </script>
+</body>
+</html>
